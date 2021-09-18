@@ -1,0 +1,185 @@
+---
+title: "US Births 2000-2014"
+author: "GS"
+date: "18/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, comment = "", message = FALSE, fig.align = "center")
+```
+
+```{r}
+# USbirths2000-2014_SSA.csv` contains U.S. births data for the years 2000 to 2014, as provided by the Social Security Administration.
+# 
+# Header                    Definition
+# ------                    ----------
+# 
+# year                      Year
+# month	                    Month
+# date_of_month	            Day number of the month
+# day_of_week	Day of week   where 1 is Monday and 7 is Sunday
+# births	                  Number of births
+```
+
+[Link Kaggle](https://www.kaggle.com/mysarahmadbhat/us-births-2000-to-2014?select=US_births_2000-2014_SSA.csv)
+
+```{r, packages}
+library(tidyverse)
+
+theme_set(theme_bw())
+```
+
+```{r, dataset}
+births <- read_csv("US_births_2000-2014_SSA.csv")
+
+sample_n(births, 5)
+```
+
+
+```{r, cleaning}
+births <- births %>% 
+  mutate(year = as_factor(year)) %>% 
+  mutate(month = as_factor(month)) %>% 
+  mutate(date_of_month = as_factor(date_of_month)) %>% 
+  mutate(day_of_week = as_factor(day_of_week))  
+
+levels(births$month) <- c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+levels(births$day_of_week) <- c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+births
+```
+```{r, births}
+ggplot(births, aes(births)) + 
+  geom_histogram(bins = sqrt(nrow(births)), color = "midnightblue", fill = "white") +
+  labs(title = "Distribution of births in US",
+       subtitle = "2000 - 2014",
+       x = "Number of births",
+       y = "Count of days")
+
+ggplot(births, aes(births, color = year)) + 
+  geom_density() +
+  labs(title = "Distribution of births in US",
+       subtitle = "2000 - 2014",
+       x = "Number of births",
+       y = "Count of days")
+
+summary(births$births)
+```
+
+It seems to be two means in our dataset (binomial)
+
+```{r}
+ggplot(births, aes(y=births, x = year, color = year)) + 
+  geom_boxplot() +
+  labs(title = "Distribution of births in US",
+       subtitle = "2000 - 2014",
+       x = "Number of births",
+       y = "Count of days") + 
+  theme(legend.position = "none")
+
+```
+It seems to be an insignificant increase of births in 2006 and 2007 
+
+```{r, month}
+ggplot(births, aes(births, color = year)) + 
+  geom_density() +
+  facet_wrap(~month)
+  labs(title = "Distribution of births in US",
+       subtitle = "2000 - 2014",
+       x = "Number of births",
+       y = "Count of days")
+```
+After splitting the dataset by year and month I see the same binomial behavior
+
+```{r, day_of_week}
+ggplot(births, aes(births, color = year)) + 
+  geom_density() +
+  facet_wrap(~day_of_week)
+  labs(title = "Distribution of births in US",
+       subtitle = "2000 - 2014",
+       x = "Number of births",
+       y = "Count of days")
+```
+
+After splitting the dataset by day_of_week it looks like on Saturdays and Sundays are less children born
+
+```{r, full, cache=TRUE}
+ggplot(births, aes(births, color = year)) + 
+  geom_density() +
+  facet_grid(day_of_week~month)
+  labs(title = "Distribution of births in US",
+       subtitle = "2000 - 2014",
+       x = "Number of births",
+       y = "Count of days")
+```
+I see the same behavior if I split the dataset by year, day_of_week and month.  There are some peaks around 12500 on Fridays
+
+I want see if this difference between weekends and weekdays is significant.  Even less children born on Sundays than on Saturdays.  
+There are almost 50% of more births during weekdays than during weekends with a significant p-value.
+I thought I could find a difference among weekdays (most on Thursdays and Fridays) but it was not the case.
+```{r, weekend weekdays}
+births <- births %>% 
+  mutate(weekend = if_else(day_of_week == "Sunday" | day_of_week == "Saturday", "Yes", "No"))
+
+
+births %>% 
+  group_by(weekend) %>% 
+  summarise(mean = mean(births))
+
+births %>% 
+  group_by(day_of_week) %>% 
+  summarise(mean = mean(births)) 
+
+
+library(infer)
+
+t_test(x = births, 
+       formula = births ~ weekend, 
+       order = c("Yes", "No"),
+       alternative = "two-sided")
+```
+
+
+## Conclusion
+Weekends born less children than in weekdays (p-value is significant).  Even lees children born on Sundays.
+Potentially, the physicians want to assist births in weekday than weekend.  No significant difference in the days prior to weekend (Thursday and Fridays).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
