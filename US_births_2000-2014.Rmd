@@ -67,7 +67,7 @@ ggplot(births, aes(births, color = year)) +
 summary(births$births)
 ```
 
-It seems to be two means in our dataset (binomial)
+It seems to be two means in our dataset (bi-modal)
 
 ```{r}
 ggplot(births, aes(y=births, x = year, color = year)) + 
@@ -90,7 +90,7 @@ ggplot(births, aes(births, color = year)) +
        x = "Number of births",
        y = "Count of days")
 ```
-After splitting the dataset by year and month I see the same binomial behavior
+After splitting the dataset by year and month I see the same bi-modal behavior
 
 ```{r, day_of_week}
 ggplot(births, aes(births, color = year)) + 
